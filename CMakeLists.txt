@@ -20,3 +20,16 @@ add_executable(test_tensor
 )
 target_link_libraries(test_tensor minitorch)
 add_test(NAME tensor_tests COMMAND test_tensor)
+
+find_package(pybind11 REQUIRED)
+
+pybind11_add_module(
+    minitorch_cpp
+    bindings/pybind.cpp
+)
+
+target_link_libraries(
+    minitorch_cpp
+    PRIVATE
+    minitorch
+)
