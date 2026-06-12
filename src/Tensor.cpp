@@ -58,6 +58,16 @@ void Tensor::set(const std::vector<int> &idx, float value)
     storage_->data()[index] = value;
 }
 
+const float* Tensor::get_tensor_unrolled() const
+{
+    return storage_->data();
+}
+
+float* Tensor::get_tensor_unrolled() 
+{
+    return storage_->data();
+}
+
 const std::vector<int>& Tensor::shape() const{
     return shape_;
 }

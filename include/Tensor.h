@@ -25,6 +25,8 @@ public:
     //getter and setter
     float get(const std::vector<int> &idx) const;
     void set(const std::vector<int> &idx, float value);
+    const float* get_tensor_unrolled() const;
+    float* get_tensor_unrolled() ;
 
     const std::vector<int> &shape() const;
     const std::vector<int> &strides() const;

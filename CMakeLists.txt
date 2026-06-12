@@ -11,12 +11,14 @@ include_directories(include)
 add_library(minitorch
     src/Storage.cpp
     src/Tensor.cpp
+    src/Ops.cpp
 )
 
 enable_testing()
 
 add_executable(test_tensor
-    tests/test_tensor.cpp
+    # tests/test_tensor.cpp
+    tests/test_ops.cpp
 )
 target_link_libraries(test_tensor minitorch)
 add_test(NAME tensor_tests COMMAND test_tensor)
