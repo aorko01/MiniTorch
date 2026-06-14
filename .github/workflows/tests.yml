@@ -26,8 +26,7 @@ jobs:
 
       - name: Configure CMake
         run: |
-          echo "pybind11_DIR=$(python -m pybind11 --cmakedir)" >> "$GITHUB_ENV"
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -Dpybind11_DIR="$(python -m pybind11 --cmakedir)"
 
       - name: Build
         run: cmake --build build --config Release -j 2
