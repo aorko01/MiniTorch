@@ -1,5 +1,7 @@
 #pragma once
 // #include <algorithm>
+#include <algorithm>
+#include <stdexcept>
 #include <vector>
 
 inline void increment_index(
@@ -50,4 +52,3 @@ inline std::vector<int> broadcast_shape(
 
     return out;
 }
-
