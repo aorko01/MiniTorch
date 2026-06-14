@@ -15,24 +15,26 @@ private:
 
     // given the indices where does the element actually lie in the 1D array
     int location(const std::vector<int> &idx) const;
-    bool is_contiguous() const;
     //this function would return a stride given a new shape not applicable for the reshape it should only be used given a new tensor .
     static void calculate_stride(std::vector<int>& shape,std::vector<int>& strides_) ;
-
-public:
+    
+    public:
     Tensor(std::vector<int> shape);
-
+    
     //getter and setter
     float get(const std::vector<int> &idx) const;
     void set(const std::vector<int> &idx, float value);
     const float* get_tensor_unrolled() const;
     float* get_tensor_unrolled() ;
-
+    
+    bool is_contiguous() const;
+    
     const std::vector<int> &shape() const;
     const std::vector<int> &strides() const;
 
     // shape views and reshapes
     Tensor transpose(int dim0, int dim1) const;
     Tensor reshape(const std::vector<int>& new_shape) const;
+    Tensor broadcast_view(const std::vector<int>& out_shape) const;
 
 };

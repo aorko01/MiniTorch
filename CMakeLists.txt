@@ -17,11 +17,17 @@ add_library(minitorch
 enable_testing()
 
 add_executable(test_tensor
-    # tests/test_tensor.cpp
-    tests/test_ops.cpp
+    tests/test_tensor.cpp
+    # tests/test_ops.cpp
 )
 target_link_libraries(test_tensor minitorch)
 add_test(NAME tensor_tests COMMAND test_tensor)
+
+add_executable(test_ops
+    tests/test_ops.cpp
+)
+target_link_libraries(test_ops minitorch)
+add_test(NAME ops_tests COMMAND test_ops)
 
 find_package(pybind11 REQUIRED)
 

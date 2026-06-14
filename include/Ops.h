@@ -10,3 +10,7 @@ Tensor add(
 Tensor mul(
     const Tensor &a,
     const Tensor &b);
+
+Tensor broadcast_view(
+    const Tensor&a ,
+    const std::vector<int>& shape);

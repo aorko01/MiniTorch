@@ -139,3 +139,32 @@ Tensor Tensor::reshape(const std::vector<int> &new_shape) const
     }
     return final_;
 }
+
+Tensor Tensor::broadcast_view(const std::vector<int>& out_shape) const
+{
+    Tensor out(out_shape);
+
+    out.storage_ = this->storage_;   // shared storage (view)
+    out.offset_  = this->offset_;
+
+    out.shape_ = out_shape;
+    out.strides_.resize(out_shape.size());
+
+    int ndim_a = shape_.size();
+    int ndim_o = out_shape.size();
+
+    for (int i = 0; i < ndim_o; i++)
+    {
+        int a_i = i - (ndim_o - ndim_a);
+
+        int dim_a = (a_i >= 0) ? shape_[a_i] : 1;
+        int stride_a = (a_i >= 0) ? strides_[a_i] : 0;
+
+        if (dim_a == 1)
+            out.strides_[i] = 0;
+        else
+            out.strides_[i] = stride_a;
+    }
+
+    return out;
+}
