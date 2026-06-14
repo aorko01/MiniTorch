@@ -13,6 +13,7 @@ add_library(minitorch
     src/Tensor.cpp
     src/Ops.cpp
 )
+set_target_properties(minitorch PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 enable_testing()
 
