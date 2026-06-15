@@ -58,6 +58,23 @@ void Tensor::set(const std::vector<int> &idx, float value)
     storage_->data()[index] = value;
 }
 
+
+void Tensor::set_grad_fn(const std::shared_ptr<GradFn> &fn)
+{
+    grad_fn_ = fn;
+    requires_grad_ = static_cast<bool>(fn);
+    is_leaf_ = false;
+}
+
+void Tensor::set_requires_grad(){
+    requires_grad_=true;
+}
+
+void Tensor::set_is_leaf()
+{
+    is_leaf_=true;
+}
+
 const float* Tensor::get_tensor_unrolled() const
 {
     return storage_->data();

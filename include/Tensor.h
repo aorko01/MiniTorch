@@ -34,6 +34,11 @@ public:
     const float *get_tensor_unrolled() const;
     float *get_tensor_unrolled();
 
+    //autograd related getter and setter
+    void set_grad_fn(const std::shared_ptr<GradFn> &fn);
+    void set_requires_grad();
+    void set_is_leaf();
+
     bool is_contiguous() const;
 
     const std::vector<int> &shape() const;
