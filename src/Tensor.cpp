@@ -66,13 +66,13 @@ void Tensor::set_grad_fn(const std::shared_ptr<GradFn> &fn)
     is_leaf_ = false;
 }
 
-void Tensor::set_requires_grad(){
-    requires_grad_=true;
+void Tensor::set_requires_grad(bool flag){
+    requires_grad_=flag;
 }
 
-void Tensor::set_is_leaf()
+void Tensor::set_is_leaf(bool flag)
 {
-    is_leaf_=true;
+    is_leaf_=flag;
 }
 
 const float* Tensor::get_tensor_unrolled() const
@@ -103,6 +103,20 @@ Tensor Tensor::transpose(int dim0, int dim1) const
     std::swap(out.shape_[dim0], out.shape_[dim1]);
     std::swap(out.strides_[dim0], out.strides_[dim1]);
     return out;
+}
+
+bool Tensor::requires_grad() const
+{
+    return requires_grad_;
+}
+
+bool Tensor::is_leaf() const{
+    return is_leaf_;
+}
+
+std::shared_ptr<GradFn> Tensor::grad_fn() const
+{
+    return grad_fn_;
 }
 
 bool Tensor::is_contiguous() const

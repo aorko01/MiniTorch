@@ -36,10 +36,14 @@ public:
 
     //autograd related getter and setter
     void set_grad_fn(const std::shared_ptr<GradFn> &fn);
-    void set_requires_grad();
-    void set_is_leaf();
+    void set_requires_grad(bool flag);
+    void set_is_leaf(bool flag);
 
+
+    bool requires_grad() const;
+    bool is_leaf() const;
     bool is_contiguous() const;
+    std::shared_ptr<GradFn> grad_fn() const;
 
     const std::vector<int> &shape() const;
     const std::vector<int> &strides() const;

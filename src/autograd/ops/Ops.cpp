@@ -1,5 +1,7 @@
 #include "autograd/ops/Ops.h"
 #include "utils.h"
+#include"autograd/ops/AddBackward.h"
+#include"autograd/ops/MulBackward.h"
 #include <stdexcept>
 // for conditional compilation
 #if defined(__AVX2__)
@@ -121,7 +123,7 @@ void simd_mul(const Tensor &a, const Tensor &b, Tensor &out, const std::vector<i
 }
 
 
-Tensor add(const Tensor &a, const Tensor &b)
+Tensor raw_add(const Tensor &a, const Tensor &b)
 {
     std::vector<int> shape_a = a.shape();
     std::vector<int> shape_b = b.shape();
@@ -151,7 +153,7 @@ Tensor add(const Tensor &a, const Tensor &b)
 }
 
 
-Tensor mul(const Tensor &a, const Tensor &b)
+Tensor raw_mul(const Tensor &a, const Tensor &b)
 {
     std::vector<int> shape_a = a.shape();
     std::vector<int> shape_b = b.shape();
@@ -177,5 +179,40 @@ Tensor mul(const Tensor &a, const Tensor &b)
         generic_mul(a_view, b_view, out, output_shape);
     }
 
+    return out;
+}
+
+Tensor add(const Tensor& a, const Tensor& b) {
+    Tensor out=raw_add(a,b);
+    if(a.requires_grad() || b.requires_grad())
+    {
+        auto fn = std::make_shared<AddBackward>();
+        fn->next_func = {
+            a.is_leaf() ? nullptr : a.grad_fn(),
+            b.is_leaf() ? nullptr : b.grad_fn()
+        };
+
+        out.set_grad_fn(fn);
+        out.set_requires_grad(true);
+        out.set_is_leaf(false);
+    }
+    return out;
+}
+
+
+Tensor mul(const Tensor& a, const Tensor& b) {
+    Tensor out=raw_mul(a,b);
+    if(a.requires_grad() || b.requires_grad())
+    {
+        auto fn = std::make_shared<MulBackward>();
+        fn->next_func = {
+            a.is_leaf() ? nullptr : a.grad_fn(),
+            b.is_leaf() ? nullptr : b.grad_fn()
+        };
+
+        out.set_grad_fn(fn);
+        out.set_requires_grad(true);
+        out.set_is_leaf(false);
+    }
     return out;
 }

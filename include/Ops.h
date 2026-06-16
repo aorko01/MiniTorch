@@ -3,6 +3,15 @@
 
 class Tensor;
 
+
+Tensor raw_add(
+    const Tensor &a,
+    const Tensor &b);
+
+Tensor raw_mul(
+    const Tensor &a,
+    const Tensor &b);
+    
 Tensor add(
     const Tensor &a,
     const Tensor &b);
