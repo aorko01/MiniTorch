@@ -15,6 +15,7 @@ std::vector<Tensor> AccumulateGrad::apply(
     auto var = variable.lock();
     if (var)
     {
+        
         if (!var->grad())
         {
             // First gradient

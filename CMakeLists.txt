@@ -14,6 +14,7 @@ add_library(minitorch
     src/autograd/ops/Ops.cpp
     src/autograd/ops/AddBackward.cpp
     src/autograd/ops/MulBackward.cpp
+    src/autograd/ops/AccumulateGrad.cpp
 )
 set_target_properties(minitorch PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
