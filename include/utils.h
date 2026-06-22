@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
+#include"autograd/Edge.h"
+#include "autograd/ops/AccumulateGrad.h"
 
 inline void increment_index(
     std::vector<int> &idx,
@@ -51,4 +53,15 @@ inline std::vector<int> broadcast_shape(
     }
 
     return out;
+}
+
+
+inline Edge make_edge(const Tensor& t, int input_nr) {
+    if (!t.requires_grad())
+        return { nullptr, 0 };
+    if (!t.is_leaf())
+        return { t.grad_fn(), input_nr };
+    // leaf case — AccumulateGrad should already exist
+    // since set_requires_grad was called at construction
+    return { t.grad_fn(), input_nr };
 }

@@ -186,9 +186,7 @@ Tensor add(const Tensor &a, const Tensor &b)
     if (a.requires_grad() || b.requires_grad())
     {
         auto fn = std::make_shared<AddBackward>();
-        fn->next_func = {
-            a.is_leaf() ? nullptr : a.grad_fn(),
-            b.is_leaf() ? nullptr : b.grad_fn()};
+        fn->next_func = {make_edge(a,0),make_edge(b,1)};
 
         out.set_grad_fn(fn);
         out.set_requires_grad(true);
@@ -203,9 +201,7 @@ Tensor mul(const Tensor &a, const Tensor &b)
     if (a.requires_grad() || b.requires_grad())
     {
         auto fn = std::make_shared<MulBackward>(a, b);
-        fn->next_func = {
-            a.is_leaf() ? nullptr : a.grad_fn(),
-            b.is_leaf() ? nullptr : b.grad_fn()};
+        fn->next_func = { make_edge(a, 0), make_edge(b, 1) };  // fixed: next_functions + make_edge
 
         out.set_grad_fn(fn);
         out.set_requires_grad(true);

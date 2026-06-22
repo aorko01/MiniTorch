@@ -1,11 +1,14 @@
 #pragma once
 
 #include <vector>
-#include "Tensor.h"
+#include<memory>
+#include"Edge.h"
+
+class Tensor;
 class GradFn
 {
 public:
-    std::vector<std::shared_ptr<GradFn>> next_func;
+    std::vector<Edge> next_func;
 
     virtual std::vector<Tensor> apply(const std::vector<Tensor> &grad_outputs) = 0;
 

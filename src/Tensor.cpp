@@ -75,6 +75,16 @@ void Tensor::set_is_leaf(bool flag)
     is_leaf_=flag;
 }
 
+std::shared_ptr<Tensor> Tensor::grad() const
+{
+    return grad_;
+}
+
+void Tensor::set_grad(const std::shared_ptr<Tensor>& grad)
+{
+    grad_ = grad;
+}
+
 const float* Tensor::get_tensor_unrolled() const
 {
     return storage_->data();

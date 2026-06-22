@@ -6,7 +6,7 @@
 
 class GradFn;
 
-class Tensor
+class Tensor: public std::enable_shared_from_this<Tensor> 
 {
 private:
     std::shared_ptr<Storage> storage_;
@@ -38,6 +38,8 @@ public:
     void set_grad_fn(const std::shared_ptr<GradFn> &fn);
     void set_requires_grad(bool flag);
     void set_is_leaf(bool flag);
+    std::shared_ptr<Tensor> grad() const;
+    void set_grad(const std::shared_ptr<Tensor>& grad);
 
 
     bool requires_grad() const;
