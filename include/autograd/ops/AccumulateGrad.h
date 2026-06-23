@@ -10,7 +10,7 @@ class AccumulateGrad : public GradFn
 public:
     std::weak_ptr<Tensor> variable;
 
-    explicit AccumulateGrad(std::shared_ptr<Tensor> var);
+    explicit AccumulateGrad(std::weak_ptr<Tensor> var);
 
     std::vector<Tensor> apply(const std::vector<Tensor> &grad_outputs) override;
 };

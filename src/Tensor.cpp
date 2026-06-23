@@ -68,6 +68,10 @@ void Tensor::set_grad_fn(const std::shared_ptr<GradFn> &fn)
 
 void Tensor::set_requires_grad(bool flag){
     requires_grad_=flag;
+    if (flag && is_leaf_ && !grad_fn_) {
+        // 'this' must be owned by a shared_ptr for this to work
+        grad_fn_ = std::make_shared<AccumulateGrad>(weak_from_this());// sends a weak pointer of this that's why we used the public std::enable_shared_from_this<Tensor>  while defining the tensor class
+    }
 }
 
 void Tensor::set_is_leaf(bool flag)

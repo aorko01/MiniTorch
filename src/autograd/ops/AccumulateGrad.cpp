@@ -4,7 +4,7 @@
 #include<memory>
 
 
-AccumulateGrad::AccumulateGrad(std::shared_ptr<Tensor> var)
+AccumulateGrad::AccumulateGrad(std::weak_ptr<Tensor> var)
     : variable(var)
 {
 }

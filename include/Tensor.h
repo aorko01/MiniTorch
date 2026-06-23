@@ -17,7 +17,7 @@ private:
     //for autograd
     bool requires_grad_ = false;
     std::shared_ptr<Tensor> grad_;          // accumulated gradient (same shape)
-    std::shared_ptr<GradFn> grad_fn_;       // null for leaf tensors
+    std::shared_ptr<GradFn> grad_fn_;       
     bool is_leaf_ = true;
 
     // given the indices where does the element actually lie in the 1D array
