@@ -33,6 +33,7 @@ public:
     void set(const std::vector<int> &idx, float value);
     const float *get_tensor_unrolled() const;
     float *get_tensor_unrolled();
+    void set_device(std::string device);
 
     //autograd related getter and setter
     void set_grad_fn(const std::shared_ptr<GradFn> &fn);

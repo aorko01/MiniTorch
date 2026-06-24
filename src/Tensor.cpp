@@ -48,16 +48,24 @@ int Tensor::location(const std::vector<int> &idx) const
 float Tensor::get(const std::vector<int> &idx) const
 {
     int index = location(idx);
-    // data() returns a pointer to float which is then accessed by the index properly
-    return storage_->data()[index];
+    return storage_->get_value(index);
 }
 
 void Tensor::set(const std::vector<int> &idx, float value)
 {
     int index = location(idx);
-    storage_->data()[index] = value;
+    storage_->set_value(index, value);
 }
 
+void Tensor::set_device(std::string device)
+{
+    if (device != "cpu" && device != "cuda")
+    {
+        throw std::runtime_error("device must be either 'cpu' or 'cuda'");
+    }
+
+    storage_->set_device(device);
+}
 
 void Tensor::set_grad_fn(const std::shared_ptr<GradFn> &fn)
 {
@@ -66,17 +74,19 @@ void Tensor::set_grad_fn(const std::shared_ptr<GradFn> &fn)
     is_leaf_ = false;
 }
 
-void Tensor::set_requires_grad(bool flag){
-    requires_grad_=flag;
-    if (flag && is_leaf_ && !grad_fn_) {
+void Tensor::set_requires_grad(bool flag)
+{
+    requires_grad_ = flag;
+    if (flag && is_leaf_ && !grad_fn_)
+    {
         // 'this' must be owned by a shared_ptr for this to work
-        grad_fn_ = std::make_shared<AccumulateGrad>(weak_from_this());// sends a weak pointer of this that's why we used the public std::enable_shared_from_this<Tensor>  while defining the tensor class
+        grad_fn_ = std::make_shared<AccumulateGrad>(weak_from_this()); // sends a weak pointer of this that's why we used the public std::enable_shared_from_this<Tensor>  while defining the tensor class
     }
 }
 
 void Tensor::set_is_leaf(bool flag)
 {
-    is_leaf_=flag;
+    is_leaf_ = flag;
 }
 
 std::shared_ptr<Tensor> Tensor::grad() const
@@ -84,26 +94,28 @@ std::shared_ptr<Tensor> Tensor::grad() const
     return grad_;
 }
 
-void Tensor::set_grad(const std::shared_ptr<Tensor>& grad)
+void Tensor::set_grad(const std::shared_ptr<Tensor> &grad)
 {
     grad_ = grad;
 }
 
-const float* Tensor::get_tensor_unrolled() const
+const float *Tensor::get_tensor_unrolled() const
 {
     return storage_->data();
 }
 
-float* Tensor::get_tensor_unrolled() 
+float *Tensor::get_tensor_unrolled()
 {
     return storage_->data();
 }
 
-const std::vector<int>& Tensor::shape() const{
+const std::vector<int> &Tensor::shape() const
+{
     return shape_;
 }
 
-const std::vector<int> & Tensor::strides() const{
+const std::vector<int> &Tensor::strides() const
+{
     return strides_;
 }
 
@@ -124,7 +136,8 @@ bool Tensor::requires_grad() const
     return requires_grad_;
 }
 
-bool Tensor::is_leaf() const{
+bool Tensor::is_leaf() const
+{
     return is_leaf_;
 }
 
@@ -185,12 +198,12 @@ Tensor Tensor::reshape(const std::vector<int> &new_shape) const
     return final_;
 }
 
-Tensor Tensor::broadcast_view(const std::vector<int>& out_shape) const
+Tensor Tensor::broadcast_view(const std::vector<int> &out_shape) const
 {
     Tensor out(out_shape);
 
-    out.storage_ = this->storage_;   // shared storage (view)
-    out.offset_  = this->offset_;
+    out.storage_ = this->storage_; // shared storage (view)
+    out.offset_ = this->offset_;
 
     out.shape_ = out_shape;
     out.strides_.resize(out_shape.size());
