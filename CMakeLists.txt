@@ -108,11 +108,6 @@ set(MINITORCH_SOURCES
     src/autograd/Engine.cpp
 )
 
-# If Storage has device-specific .cu code, add it here only when CUDA is on.
-if(USE_CUDA)
-    list(APPEND MINITORCH_SOURCES src/Storage.cu)   # add if you split CUDA kernels out
-endif()
-
 add_library(minitorch ${MINITORCH_SOURCES})
 set_target_properties(minitorch PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
