@@ -1,4 +1,5 @@
 name: tests
+
 on:
   push:
     branches:
@@ -6,9 +7,10 @@ on:
   pull_request:
 
 jobs:
-  # ── CPU tests on GitHub's free runners ──────────────────────────────────────
+  # CPU tests on GitHub-hosted runners
   build-and-test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -27,19 +29,24 @@ jobs:
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
+            -DUSE_CUDA=OFF \
             -Dpybind11_DIR="$(python -m pybind11 --cmakedir)"
 
       - name: Build
-        run: cmake --build build --config Release -j 2
+        run: |
+          cmake --build build --config Release -j 2
 
       - name: Test (CPU only)
-        run: ctest --test-dir build --output-on-failure -E gpu
+        run: |
+          cd build
+          ctest --output-on-failure
 
-  # ── GPU tests on your self-hosted runner ────────────────────────────────────
+  # GPU tests on self-hosted runner
   gpu-tests:
     runs-on: self-hosted
-    needs: build-and-test          # only runs if CPU job passes
-    if: github.event_name != 'pull_request'   # skip for PRs (security)
+    needs: build-and-test
+    if: github.event_name != 'pull_request'
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -54,19 +61,25 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pybind11
 
-      - name: Verify GPU is available
-        run: nvidia-smi
+      - name: Verify toolchain
+        run: |
+          g++-12 --version
+          nvcc --version
+          nvidia-smi
 
       - name: Configure CMake
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DUSE_CUDA=ON \
-            -DCMAKE_CUDA_COMPILER=/usr/lib/nvidia-cuda-toolkit/bin/nvcc \
+            -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-12 \
             -Dpybind11_DIR="$(python -m pybind11 --cmakedir)"
 
       - name: Build
-        run: cmake --build build --config Release -j 2
+        run: |
+          cmake --build build --config Release -j 2
 
-      - name: Test (GPU only)
-        run: ctest --test-dir build --output-on-failure -L gpu
+      - name: Test
+        run: |
+          cd build
+          ctest --output-on-failure

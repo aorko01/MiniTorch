@@ -6,6 +6,10 @@
 #include <cmath>
 #include <vector>
 
+#ifdef USE_CUDA
+#include <cuda_runtime.h>
+#endif
+
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 static bool approx_equal(float a, float b, float eps = 1e-5f)
@@ -293,7 +297,6 @@ void test_mul_broadcast_scalar()
                     "broadcast scalar mul [" + std::to_string(i) + "]");
 }
 
-// Both operand orders must broadcast symmetrically
 void test_add_broadcast_scalar_reversed()
 {
     Tensor a({4}), b({1});
@@ -326,7 +329,6 @@ void test_mul_broadcast_scalar_reversed()
 
 void test_add_broadcast_row()
 {
-    // a shape {1,3}, b shape {2,3}
     Tensor a({1, 3}), b({2, 3});
     a.set({0, 0}, 1.f);
     a.set({0, 1}, 2.f);
@@ -339,7 +341,7 @@ void test_add_broadcast_row()
     b.set({1, 1}, 50.f);
     b.set({1, 2}, 60.f);
 
-    Tensor c = add(a, b); // expected shape {2,3}
+    Tensor c = add(a, b);
 
     ASSERT_TRUE(approx_equal(c.get({0, 0}), 11.f), "broadcast row add [0][0]");
     ASSERT_TRUE(approx_equal(c.get({0, 1}), 22.f), "broadcast row add [0][1]");
@@ -363,7 +365,7 @@ void test_mul_broadcast_row()
     b.set({1, 1}, 5.f);
     b.set({1, 2}, 6.f);
 
-    Tensor c = mul(a, b); // expected shape {2,3}
+    Tensor c = mul(a, b);
 
     ASSERT_TRUE(approx_equal(c.get({0, 0}), 2.f), "broadcast row mul [0][0]");
     ASSERT_TRUE(approx_equal(c.get({0, 1}), 6.f), "broadcast row mul [0][1]");
@@ -377,7 +379,6 @@ void test_mul_broadcast_row()
 
 void test_add_broadcast_col()
 {
-    // a shape {3,1}, b shape {3,2}
     Tensor a({3, 1}), b({3, 2});
     a.set({0, 0}, 1.f);
     a.set({1, 0}, 2.f);
@@ -390,7 +391,7 @@ void test_add_broadcast_col()
     b.set({2, 0}, 50.f);
     b.set({2, 1}, 60.f);
 
-    Tensor c = add(a, b); // expected shape {3,2}
+    Tensor c = add(a, b);
 
     ASSERT_TRUE(approx_equal(c.get({0, 0}), 11.f), "broadcast col add [0][0]");
     ASSERT_TRUE(approx_equal(c.get({0, 1}), 21.f), "broadcast col add [0][1]");
@@ -414,7 +415,7 @@ void test_mul_broadcast_col()
     b.set({2, 0}, 9.f);
     b.set({2, 1}, 10.f);
 
-    Tensor c = mul(a, b); // expected shape {3,2}
+    Tensor c = mul(a, b);
 
     ASSERT_TRUE(approx_equal(c.get({0, 0}), 10.f), "broadcast col mul [0][0]");
     ASSERT_TRUE(approx_equal(c.get({0, 1}), 12.f), "broadcast col mul [0][1]");
@@ -437,7 +438,7 @@ void test_add_broadcast_outer()
     b.set({0, 2}, 30.f);
     b.set({0, 3}, 40.f);
 
-    Tensor c = add(a, b); // expected shape {3,4}
+    Tensor c = add(a, b);
 
     ASSERT_TRUE(approx_equal(c.get({0, 0}), 11.f), "broadcast outer add [0][0]");
     ASSERT_TRUE(approx_equal(c.get({0, 3}), 41.f), "broadcast outer add [0][3]");
@@ -457,7 +458,7 @@ void test_mul_broadcast_outer()
     b.set({0, 2}, 3.f);
     b.set({0, 3}, 4.f);
 
-    Tensor c = mul(a, b); // expected shape {3,4}
+    Tensor c = mul(a, b);
 
     ASSERT_TRUE(approx_equal(c.get({0, 0}), 2.f), "broadcast outer mul [0][0]");
     ASSERT_TRUE(approx_equal(c.get({0, 3}), 8.f), "broadcast outer mul [0][3]");
@@ -467,11 +468,9 @@ void test_mul_broadcast_outer()
 }
 
 // ── leading-dim expand  {N} op {M,N} → {M,N} ─────────────────────────────────
-// 1-D tensor aligns to trailing dimension (NumPy / standard broadcast rule)
 
 void test_add_broadcast_leading_dim()
 {
-    // a shape {3}, b shape {2,3}
     Tensor a({3}), b({2, 3});
     a.set({0}, 1.f);
     a.set({1}, 2.f);
@@ -484,7 +483,7 @@ void test_add_broadcast_leading_dim()
     b.set({1, 1}, 50.f);
     b.set({1, 2}, 60.f);
 
-    Tensor c = add(a, b); // expected shape {2,3}
+    Tensor c = add(a, b);
 
     ASSERT_TRUE(approx_equal(c.get({0, 0}), 11.f), "broadcast leading add [0][0]");
     ASSERT_TRUE(approx_equal(c.get({0, 1}), 22.f), "broadcast leading add [0][1]");
@@ -508,7 +507,7 @@ void test_mul_broadcast_leading_dim()
     b.set({1, 1}, 5.f);
     b.set({1, 2}, 6.f);
 
-    Tensor c = mul(a, b); // expected shape {2,3}
+    Tensor c = mul(a, b);
 
     ASSERT_TRUE(approx_equal(c.get({0, 0}), 2.f), "broadcast leading mul [0][0]");
     ASSERT_TRUE(approx_equal(c.get({0, 1}), 6.f), "broadcast leading mul [0][1]");
@@ -519,11 +518,9 @@ void test_mul_broadcast_leading_dim()
 }
 
 // ── broadcast error / rejection cases ────────────────────────────────────────
-// Shapes that are non-empty and genuinely incompatible must throw.
 
 void test_add_broadcast_incompatible()
 {
-    // {2,3} op {2,4} — last dims differ and neither is 1
     Tensor a({2, 3}), b({2, 4});
     bool threw = false;
     try
@@ -554,7 +551,6 @@ void test_mul_broadcast_incompatible()
 
 void test_add_broadcast_incompatible_leading()
 {
-    // {3} op {2,4} — trailing dim 3 != 4 and neither is 1
     Tensor a({3}), b({2, 4});
     bool threw = false;
     try
@@ -587,7 +583,6 @@ void test_mul_broadcast_incompatible_leading()
 
 void test_add_broadcast_with_zeros()
 {
-    // Adding a zero row tensor should act as identity for every row
     Tensor a({1, 3}), b({4, 3});
     a.set({0, 0}, 0.f);
     a.set({0, 1}, 0.f);
@@ -606,7 +601,6 @@ void test_add_broadcast_with_zeros()
 
 void test_mul_broadcast_with_ones()
 {
-    // Multiplying by an all-ones column tensor should be identity for every col
     Tensor a({3, 1}), b({3, 4});
     a.set({0, 0}, 1.f);
     a.set({1, 0}, 1.f);
@@ -623,17 +617,15 @@ void test_mul_broadcast_with_ones()
                         "broadcast ones-col mul identity [" + std::to_string(i) + "][" + std::to_string(j) + "]");
 }
 
-// ── timing benchmarks ────────────────────────────────────────────────────────
+// ── timing benchmarks (CPU only) ─────────────────────────────────────────────
 
 void bench_add(int size)
 {
     std::vector<int> shape = {size};
     Tensor a(shape), b(shape);
 
-    const float *ra = a.get_tensor_unrolled();
-    const float *rb = b.get_tensor_unrolled();
-    float *wa = const_cast<float *>(ra);
-    float *wb = const_cast<float *>(rb);
+    float *wa = a.get_tensor_unrolled();
+    float *wb = b.get_tensor_unrolled();
     for (int i = 0; i < size; ++i)
     {
         wa[i] = static_cast<float>(i);
@@ -650,10 +642,8 @@ void bench_mul(int size)
     std::vector<int> shape = {size};
     Tensor a(shape), b(shape);
 
-    const float *ra = a.get_tensor_unrolled();
-    float *wa = const_cast<float *>(ra);
-    const float *rb = b.get_tensor_unrolled();
-    float *wb = const_cast<float *>(rb);
+    float *wa = a.get_tensor_unrolled();
+    float *wb = b.get_tensor_unrolled();
     for (int i = 0; i < size; ++i)
     {
         wa[i] = static_cast<float>(i);
@@ -667,13 +657,10 @@ void bench_mul(int size)
 
 void bench_add_broadcast_row(int rows, int cols)
 {
-    // {1, cols} broadcast over {rows, cols}
     Tensor a({1, cols}), b({rows, cols});
 
-    const float *rb = b.get_tensor_unrolled();
-    float *wb = const_cast<float *>(rb);
-    const float *ra = a.get_tensor_unrolled();
-    float *wa = const_cast<float *>(ra);
+    float *wa = a.get_tensor_unrolled();
+    float *wb = b.get_tensor_unrolled();
     for (int j = 0; j < cols; ++j)
         wa[j] = static_cast<float>(j);
     for (int i = 0; i < rows * cols; ++i)
@@ -687,13 +674,10 @@ void bench_add_broadcast_row(int rows, int cols)
 
 void bench_mul_broadcast_col(int rows, int cols)
 {
-    // {rows, 1} broadcast over {rows, cols}
     Tensor a({rows, 1}), b({rows, cols});
 
-    const float *ra = a.get_tensor_unrolled();
-    float *wa = const_cast<float *>(ra);
-    const float *rb = b.get_tensor_unrolled();
-    float *wb = const_cast<float *>(rb);
+    float *wa = a.get_tensor_unrolled();
+    float *wb = b.get_tensor_unrolled();
     for (int i = 0; i < rows; ++i)
         wa[i] = static_cast<float>(i + 1);
     for (int i = 0; i < rows * cols; ++i)
@@ -704,6 +688,245 @@ void bench_mul_broadcast_col(int rows, int cols)
     std::cout << "[BENCH] mul  broadcast_col  rows=" << rows
               << "  cols=" << cols << "  time=" << ms << " ms\n";
 }
+
+// ── CUDA vs CPU timing benchmarks ────────────────────────────────────────────
+//
+// Each function:
+//   1. Fills identical data on both CPU and CUDA tensors.
+//   2. Runs a warmup pass on CUDA to avoid measuring lazy-init overhead.
+//   3. Times both devices and spot-checks results for correctness.
+//   4. Prints a side-by-side summary with a speedup ratio.
+
+#ifdef USE_CUDA
+
+// Fill a raw buffer with: buf[i] = i * scale + 1.0
+static void fill_pattern(float *buf, int n, float scale = 1.f)
+{
+    for (int i = 0; i < n; ++i)
+        buf[i] = static_cast<float>(i) * scale + 1.f;
+}
+
+// ── 1-D add: CPU vs CUDA  {N} ────────────────────────────────────────────────
+
+void bench_add_cpu_vs_cuda_1d(int N)
+{
+    std::cout << "\n[CUDA BENCH] add 1-D  N=" << N << "\n";
+
+    // CPU
+    Tensor a_cpu({N}), b_cpu({N});
+    fill_pattern(a_cpu.get_tensor_unrolled(), N, 1.f);
+    fill_pattern(b_cpu.get_tensor_unrolled(), N, 2.f);
+
+    Tensor c_cpu({N});
+    double cpu_ms = time_ms([&]
+                            { c_cpu = add(a_cpu, b_cpu); });
+
+    // spot-check: a[i] = i*1+1,  b[i] = i*2+1  →  c[i] = 3i + 2
+    for (int i : {0, N / 4, N / 2, N - 1})
+    {
+        float expected = static_cast<float>(i) * 3.f + 2.f;
+        ASSERT_TRUE(approx_equal(c_cpu.get({i}), expected),
+                    "cpu add 1-D spot-check [" + std::to_string(i) + "]");
+    }
+
+    // CUDA: warmup then timed run
+    Tensor a_cuda({N}), b_cuda({N});
+    fill_pattern(a_cuda.get_tensor_unrolled(), N, 1.f);
+    fill_pattern(b_cuda.get_tensor_unrolled(), N, 2.f);
+    a_cuda.set_device("cuda");
+    b_cuda.set_device("cuda");
+
+    add(a_cuda, b_cuda);     // warmup
+    cudaDeviceSynchronize(); // flush before timing
+
+    Tensor c_cuda({N});
+    double cuda_ms = time_ms([&]
+                             {
+                                 c_cuda = add(a_cuda, b_cuda);
+                                 cudaDeviceSynchronize(); // wait for kernel to finish
+                             });
+
+    for (int i : {0, N / 4, N / 2, N - 1})
+    {
+        float expected = static_cast<float>(i) * 3.f + 2.f;
+        ASSERT_TRUE(approx_equal(c_cuda.get({i}), expected),
+                    "cuda add 1-D spot-check [" + std::to_string(i) + "]");
+    }
+
+    std::cout << "[CUDA BENCH] add 1-D  N=" << N
+              << "  cpu=" << cpu_ms << " ms"
+              << "  cuda=" << cuda_ms << " ms"
+              << "  speedup=" << (cpu_ms / cuda_ms) << "x\n";
+}
+
+// ── 1-D mul: CPU vs CUDA  {N} ────────────────────────────────────────────────
+
+void bench_mul_cpu_vs_cuda_1d(int N)
+{
+    std::cout << "\n[CUDA BENCH] mul 1-D  N=" << N << "\n";
+
+    // CPU
+    Tensor a_cpu({N}), b_cpu({N});
+    fill_pattern(a_cpu.get_tensor_unrolled(), N, 1.f);
+    fill_pattern(b_cpu.get_tensor_unrolled(), N, 0.5f);
+
+    Tensor c_cpu({N});
+    double cpu_ms = time_ms([&]
+                            { c_cpu = mul(a_cpu, b_cpu); });
+
+    // spot-check: a[i] = i*1+1,  b[i] = i*0.5+1  →  c[i] = (i+1)*(0.5i+1)
+    for (int i : {0, N / 4, N / 2, N - 1})
+    {
+        float expected = (static_cast<float>(i) + 1.f) *
+                         (static_cast<float>(i) * 0.5f + 1.f);
+        ASSERT_TRUE(approx_equal(c_cpu.get({i}), expected, 1e-3f),
+                    "cpu mul 1-D spot-check [" + std::to_string(i) + "]");
+    }
+
+    // CUDA: warmup then timed run
+    Tensor a_cuda({N}), b_cuda({N});
+    fill_pattern(a_cuda.get_tensor_unrolled(), N, 1.f);
+    fill_pattern(b_cuda.get_tensor_unrolled(), N, 0.5f);
+    a_cuda.set_device("cuda");
+    b_cuda.set_device("cuda");
+
+    mul(a_cuda, b_cuda);     // warmup
+    cudaDeviceSynchronize(); // flush before timing
+
+    Tensor c_cuda({N});
+    double cuda_ms = time_ms([&]
+                             {
+                                 c_cuda = mul(a_cuda, b_cuda);
+                                 cudaDeviceSynchronize(); // wait for kernel to finish
+                             });
+
+    for (int i : {0, N / 4, N / 2, N - 1})
+    {
+        float expected = (static_cast<float>(i) + 1.f) *
+                         (static_cast<float>(i) * 0.5f + 1.f);
+        ASSERT_TRUE(approx_equal(c_cuda.get({i}), expected, 1e-3f),
+                    "cuda mul 1-D spot-check [" + std::to_string(i) + "]");
+    }
+
+    std::cout << "[CUDA BENCH] mul 1-D  N=" << N
+              << "  cpu=" << cpu_ms << " ms"
+              << "  cuda=" << cuda_ms << " ms"
+              << "  speedup=" << (cpu_ms / cuda_ms) << "x\n";
+}
+
+// ── 2-D broadcast-row add: CPU vs CUDA  {1,C} op {R,C} ──────────────────────
+
+void bench_add_broadcast_row_cpu_vs_cuda(int rows, int cols)
+{
+    std::cout << "\n[CUDA BENCH] add broadcast-row  rows=" << rows
+              << "  cols=" << cols << "\n";
+
+    // a[0][j] = j*1+1,  b[i][j] = (i*cols+j)*0.5+1
+    // expected c[i][j] = a[0][j] + b[i][j]
+    auto expected_val = [&](int r, int c2)
+    {
+        return (static_cast<float>(c2) * 1.f + 1.f) +
+               (static_cast<float>(r * cols + c2) * 0.5f + 1.f);
+    };
+
+    // CPU
+    Tensor a_cpu({1, cols}), b_cpu({rows, cols});
+    fill_pattern(a_cpu.get_tensor_unrolled(), cols, 1.f);
+    fill_pattern(b_cpu.get_tensor_unrolled(), rows * cols, 0.5f);
+
+    Tensor c_cpu({rows, cols});
+    double cpu_ms = time_ms([&]
+                            { c_cpu = add(a_cpu, b_cpu); });
+
+    for (auto [r, c2] : std::vector<std::pair<int, int>>{{0, 0}, {0, cols - 1}, {rows / 2, cols / 2}, {rows - 1, 0}, {rows - 1, cols - 1}})
+        ASSERT_TRUE(approx_equal(c_cpu.get({r, c2}), expected_val(r, c2), 1e-3f),
+                    "cpu broadcast-row add [" + std::to_string(r) + "][" + std::to_string(c2) + "]");
+
+    // CUDA
+    Tensor a_cuda({1, cols}), b_cuda({rows, cols});
+    fill_pattern(a_cuda.get_tensor_unrolled(), cols, 1.f);
+    fill_pattern(b_cuda.get_tensor_unrolled(), rows * cols, 0.5f);
+    a_cuda.set_device("cuda");
+    b_cuda.set_device("cuda");
+
+    add(a_cuda, b_cuda);     // warmup
+    cudaDeviceSynchronize(); // flush before timing
+
+    Tensor c_cuda({rows, cols});
+    double cuda_ms = time_ms([&]
+                             {
+                                 c_cuda = add(a_cuda, b_cuda);
+                                 cudaDeviceSynchronize(); // wait for kernel to finish
+                             });
+
+    for (auto [r, c2] : std::vector<std::pair<int, int>>{{0, 0}, {0, cols - 1}, {rows / 2, cols / 2}, {rows - 1, 0}, {rows - 1, cols - 1}})
+        ASSERT_TRUE(approx_equal(c_cuda.get({r, c2}), expected_val(r, c2), 1e-3f),
+                    "cuda broadcast-row add [" + std::to_string(r) + "][" + std::to_string(c2) + "]");
+
+    std::cout << "[CUDA BENCH] add broadcast-row  rows=" << rows
+              << "  cols=" << cols
+              << "  cpu=" << cpu_ms << " ms"
+              << "  cuda=" << cuda_ms << " ms"
+              << "  speedup=" << (cpu_ms / cuda_ms) << "x\n";
+}
+
+// ── 2-D broadcast-col mul: CPU vs CUDA  {R,1} op {R,C} ──────────────────────
+
+void bench_mul_broadcast_col_cpu_vs_cuda(int rows, int cols)
+{
+    std::cout << "\n[CUDA BENCH] mul broadcast-col  rows=" << rows
+              << "  cols=" << cols << "\n";
+
+    // a[i][0] = i*1+1,  b[i][j] = (i*cols+j)*1+1
+    // expected c[i][j] = a[i][0] * b[i][j]
+    auto expected_val = [&](int r, int c2)
+    {
+        return (static_cast<float>(r) * 1.f + 1.f) *
+               (static_cast<float>(r * cols + c2) * 1.f + 1.f);
+    };
+
+    // CPU
+    Tensor a_cpu({rows, 1}), b_cpu({rows, cols});
+    fill_pattern(a_cpu.get_tensor_unrolled(), rows, 1.f);
+    fill_pattern(b_cpu.get_tensor_unrolled(), rows * cols, 1.f);
+
+    Tensor c_cpu({rows, cols});
+    double cpu_ms = time_ms([&]
+                            { c_cpu = mul(a_cpu, b_cpu); });
+
+    for (auto [r, c2] : std::vector<std::pair<int, int>>{{0, 0}, {0, cols - 1}, {rows / 2, cols / 2}, {rows - 1, 0}, {rows - 1, cols - 1}})
+        ASSERT_TRUE(approx_equal(c_cpu.get({r, c2}), expected_val(r, c2), 1e-2f),
+                    "cpu broadcast-col mul [" + std::to_string(r) + "][" + std::to_string(c2) + "]");
+
+    // CUDA
+    Tensor a_cuda({rows, 1}), b_cuda({rows, cols});
+    fill_pattern(a_cuda.get_tensor_unrolled(), rows, 1.f);
+    fill_pattern(b_cuda.get_tensor_unrolled(), rows * cols, 1.f);
+    a_cuda.set_device("cuda");
+    b_cuda.set_device("cuda");
+
+    mul(a_cuda, b_cuda);     // warmup
+    cudaDeviceSynchronize(); // flush before timing
+
+    Tensor c_cuda({rows, cols});
+    double cuda_ms = time_ms([&]
+                             {
+                                 c_cuda = mul(a_cuda, b_cuda);
+                                 cudaDeviceSynchronize(); // wait for kernel to finish
+                             });
+
+    for (auto [r, c2] : std::vector<std::pair<int, int>>{{0, 0}, {0, cols - 1}, {rows / 2, cols / 2}, {rows - 1, 0}, {rows - 1, cols - 1}})
+        ASSERT_TRUE(approx_equal(c_cuda.get({r, c2}), expected_val(r, c2), 1e-2f),
+                    "cuda broadcast-col mul [" + std::to_string(r) + "][" + std::to_string(c2) + "]");
+
+    std::cout << "[CUDA BENCH] mul broadcast-col  rows=" << rows
+              << "  cols=" << cols
+              << "  cpu=" << cpu_ms << " ms"
+              << "  cuda=" << cuda_ms << " ms"
+              << "  speedup=" << (cpu_ms / cuda_ms) << "x\n";
+}
+
+#endif // USE_CUDA
 
 // ── main ─────────────────────────────────────────────────────────────────────
 
@@ -721,7 +944,9 @@ int main()
     test_mul_by_one();
     test_mul_by_zero();
     test_mul_shape_mismatch();
+
 #ifdef USE_CUDA
+    std::cout << "\n=== CUDA correctness (small tensors) ===\n";
     test_add_mul_cuda_contiguous();
 #endif
 
@@ -760,13 +985,21 @@ int main()
     test_add_broadcast_with_zeros();
     test_mul_broadcast_with_ones();
 
-    std::cout << "\n=== benchmarks ===\n";
+    std::cout << "\n=== CPU benchmarks ===\n";
     bench_add(1024);
     bench_add(1 << 20);
     bench_mul(1024);
     bench_mul(1 << 20);
     bench_add_broadcast_row(1024, 1024);
     bench_mul_broadcast_col(1024, 1024);
+
+#ifdef USE_CUDA
+    std::cout << "\n=== CUDA vs CPU timing (3060-tuned sizes) ===\n";
+    bench_add_cpu_vs_cuda_1d(1 << 20);               // 1 M elements  (~4 MB)
+    bench_mul_cpu_vs_cuda_1d(1 << 20);               // 1 M elements  (~4 MB)
+    bench_add_broadcast_row_cpu_vs_cuda(1024, 1024); // 1 M elements  (~4 MB)
+    bench_mul_broadcast_col_cpu_vs_cuda(1024, 1024); // 1 M elements  (~4 MB)
+#endif
 
     std::cout << "\n=== summary ===\n";
     std::cout << "passed: " << passed << "  failed: " << failed << "\n";

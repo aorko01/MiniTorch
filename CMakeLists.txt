@@ -85,7 +85,16 @@ endif()
 
 if(USE_CUDA)
     if(NOT CMAKE_CUDA_HOST_COMPILER)
-        set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}" CACHE FILEPATH "CUDA host compiler" FORCE)
+        find_program(MINITORCH_CUDA_HOST_COMPILER
+            NAMES g++-12 c++-12
+            HINTS /usr/bin
+        )
+
+        if(MINITORCH_CUDA_HOST_COMPILER)
+            set(CMAKE_CUDA_HOST_COMPILER "${MINITORCH_CUDA_HOST_COMPILER}" CACHE FILEPATH "CUDA host compiler" FORCE)
+        else()
+            message(FATAL_ERROR "CUDA builds require a GCC 12 host compiler. Install g++-12 or configure -DCMAKE_CUDA_HOST_COMPILER=/path/to/g++-12.")
+        endif()
     endif()
 
     enable_language(CUDA)
@@ -148,11 +157,17 @@ enable_testing()
 # ── test_tensor (CPU-only, always built) ─────────────────────────────────────
 add_executable(test_tensor tests/test_tensor.cpp)
 target_link_libraries(test_tensor PRIVATE minitorch)
+if(USE_CUDA)
+    target_link_libraries(test_tensor PRIVATE CUDA::cudart)
+endif()
 add_test(NAME tensor_tests COMMAND test_tensor)
 
 # ── test_ops ─────────────────────────────────────────────────────────────────
 add_executable(test_ops tests/test_ops.cpp)
 target_link_libraries(test_ops PRIVATE minitorch)
+if(USE_CUDA)
+    target_link_libraries(test_ops PRIVATE CUDA::cudart)
+endif()
 add_test(NAME ops_tests COMMAND test_ops)
 
 # ── test_device (only built when CUDA is available) ───────────────────────────
