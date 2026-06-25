@@ -26,15 +26,19 @@ static double time_ms(Fn &&fn)
 static int passed = 0;
 static int failed = 0;
 
-#define ASSERT_TRUE(cond, msg)                                      \
-    do {                                                            \
-        if (!(cond)) {                                              \
-            std::cerr << "[FAIL] " << msg << "\n";                 \
-            ++failed;                                               \
-        } else {                                                    \
-            std::cout << "[PASS] " << msg << "\n";                 \
-            ++passed;                                               \
-        }                                                           \
+#define ASSERT_TRUE(cond, msg)                     \
+    do                                             \
+    {                                              \
+        if (!(cond))                               \
+        {                                          \
+            std::cerr << "[FAIL] " << msg << "\n"; \
+            ++failed;                              \
+        }                                          \
+        else                                       \
+        {                                          \
+            std::cout << "[PASS] " << msg << "\n"; \
+            ++passed;                              \
+        }                                          \
     } while (0)
 
 // ── add tests ────────────────────────────────────────────────────────────────
@@ -42,8 +46,12 @@ static int failed = 0;
 void test_add_basic()
 {
     Tensor a({3}), b({3});
-    a.set({0}, 1.0f); a.set({1}, 2.0f); a.set({2}, 3.0f);
-    b.set({0}, 4.0f); b.set({1}, 5.0f); b.set({2}, 6.0f);
+    a.set({0}, 1.0f);
+    a.set({1}, 2.0f);
+    a.set({2}, 3.0f);
+    b.set({0}, 4.0f);
+    b.set({1}, 5.0f);
+    b.set({2}, 6.0f);
 
     Tensor c = add(a, b);
 
@@ -55,18 +63,22 @@ void test_add_basic()
 void test_add_2d()
 {
     Tensor a({2, 2}), b({2, 2});
-    a.set({0,0}, 1.f); a.set({0,1}, 2.f);
-    a.set({1,0}, 3.f); a.set({1,1}, 4.f);
+    a.set({0, 0}, 1.f);
+    a.set({0, 1}, 2.f);
+    a.set({1, 0}, 3.f);
+    a.set({1, 1}, 4.f);
 
-    b.set({0,0}, 10.f); b.set({0,1}, 20.f);
-    b.set({1,0}, 30.f); b.set({1,1}, 40.f);
+    b.set({0, 0}, 10.f);
+    b.set({0, 1}, 20.f);
+    b.set({1, 0}, 30.f);
+    b.set({1, 1}, 40.f);
 
     Tensor c = add(a, b);
 
-    ASSERT_TRUE(approx_equal(c.get({0,0}), 11.f), "add 2d [0][0] == 11");
-    ASSERT_TRUE(approx_equal(c.get({0,1}), 22.f), "add 2d [0][1] == 22");
-    ASSERT_TRUE(approx_equal(c.get({1,0}), 33.f), "add 2d [1][0] == 33");
-    ASSERT_TRUE(approx_equal(c.get({1,1}), 44.f), "add 2d [1][1] == 44");
+    ASSERT_TRUE(approx_equal(c.get({0, 0}), 11.f), "add 2d [0][0] == 11");
+    ASSERT_TRUE(approx_equal(c.get({0, 1}), 22.f), "add 2d [0][1] == 22");
+    ASSERT_TRUE(approx_equal(c.get({1, 0}), 33.f), "add 2d [1][0] == 33");
+    ASSERT_TRUE(approx_equal(c.get({1, 1}), 44.f), "add 2d [1][1] == 44");
 }
 
 void test_add_zeros()
@@ -87,8 +99,14 @@ void test_add_shape_mismatch()
 {
     Tensor a({3}), b({4});
     bool threw = false;
-    try { add(a, b); }
-    catch (const std::runtime_error &) { threw = true; }
+    try
+    {
+        add(a, b);
+    }
+    catch (const std::runtime_error &)
+    {
+        threw = true;
+    }
     ASSERT_TRUE(threw, "add shape mismatch throws");
 }
 
@@ -97,8 +115,12 @@ void test_add_shape_mismatch()
 void test_mul_basic()
 {
     Tensor a({3}), b({3});
-    a.set({0}, 2.0f); a.set({1}, 3.0f); a.set({2}, 4.0f);
-    b.set({0}, 5.0f); b.set({1}, 6.0f); b.set({2}, 7.0f);
+    a.set({0}, 2.0f);
+    a.set({1}, 3.0f);
+    a.set({2}, 4.0f);
+    b.set({0}, 5.0f);
+    b.set({1}, 6.0f);
+    b.set({2}, 7.0f);
 
     Tensor c = mul(a, b);
 
@@ -110,18 +132,22 @@ void test_mul_basic()
 void test_mul_2d()
 {
     Tensor a({2, 2}), b({2, 2});
-    a.set({0,0}, 1.f); a.set({0,1}, 2.f);
-    a.set({1,0}, 3.f); a.set({1,1}, 4.f);
+    a.set({0, 0}, 1.f);
+    a.set({0, 1}, 2.f);
+    a.set({1, 0}, 3.f);
+    a.set({1, 1}, 4.f);
 
-    b.set({0,0}, 2.f); b.set({0,1}, 3.f);
-    b.set({1,0}, 4.f); b.set({1,1}, 5.f);
+    b.set({0, 0}, 2.f);
+    b.set({0, 1}, 3.f);
+    b.set({1, 0}, 4.f);
+    b.set({1, 1}, 5.f);
 
     Tensor c = mul(a, b);
 
-    ASSERT_TRUE(approx_equal(c.get({0,0}),  2.f), "mul 2d [0][0] == 2");
-    ASSERT_TRUE(approx_equal(c.get({0,1}),  6.f), "mul 2d [0][1] == 6");
-    ASSERT_TRUE(approx_equal(c.get({1,0}), 12.f), "mul 2d [1][0] == 12");
-    ASSERT_TRUE(approx_equal(c.get({1,1}), 20.f), "mul 2d [1][1] == 20");
+    ASSERT_TRUE(approx_equal(c.get({0, 0}), 2.f), "mul 2d [0][0] == 2");
+    ASSERT_TRUE(approx_equal(c.get({0, 1}), 6.f), "mul 2d [0][1] == 6");
+    ASSERT_TRUE(approx_equal(c.get({1, 0}), 12.f), "mul 2d [1][0] == 12");
+    ASSERT_TRUE(approx_equal(c.get({1, 1}), 20.f), "mul 2d [1][1] == 20");
 }
 
 void test_mul_by_one()
@@ -156,10 +182,42 @@ void test_mul_shape_mismatch()
 {
     Tensor a({3}), b({5});
     bool threw = false;
-    try { mul(a, b); }
-    catch (const std::runtime_error &) { threw = true; }
+    try
+    {
+        mul(a, b);
+    }
+    catch (const std::runtime_error &)
+    {
+        threw = true;
+    }
     ASSERT_TRUE(threw, "mul shape mismatch throws");
 }
+
+#ifdef USE_CUDA
+void test_add_mul_cuda_contiguous()
+{
+    Tensor a({4}), b({4});
+    for (int i = 0; i < 4; ++i)
+    {
+        a.set({i}, static_cast<float>(i + 1));
+        b.set({i}, static_cast<float>((i + 1) * 2));
+    }
+
+    a.set_device("cuda");
+    b.set_device("cuda");
+
+    Tensor sum = add(a, b);
+    Tensor product = mul(a, b);
+
+    for (int i = 0; i < 4; ++i)
+    {
+        ASSERT_TRUE(approx_equal(sum.get({i}), static_cast<float>((i + 1) * 3)),
+                    "cuda add contiguous [" + std::to_string(i) + "]");
+        ASSERT_TRUE(approx_equal(product.get({i}), static_cast<float>((i + 1) * ((i + 1) * 2))),
+                    "cuda mul contiguous [" + std::to_string(i) + "]");
+    }
+}
+#endif
 
 // ── large tensor correctness test ────────────────────────────────────────────
 
@@ -211,7 +269,8 @@ void test_add_broadcast_scalar()
 {
     Tensor a({1}), b({4});
     a.set({0}, 10.f);
-    for (int i = 0; i < 4; ++i) b.set({i}, static_cast<float>(i + 1));
+    for (int i = 0; i < 4; ++i)
+        b.set({i}, static_cast<float>(i + 1));
 
     Tensor c = add(a, b);
 
@@ -224,7 +283,8 @@ void test_mul_broadcast_scalar()
 {
     Tensor a({1}), b({4});
     a.set({0}, 3.f);
-    for (int i = 0; i < 4; ++i) b.set({i}, static_cast<float>(i + 1));
+    for (int i = 0; i < 4; ++i)
+        b.set({i}, static_cast<float>(i + 1));
 
     Tensor c = mul(a, b);
 
@@ -237,7 +297,8 @@ void test_mul_broadcast_scalar()
 void test_add_broadcast_scalar_reversed()
 {
     Tensor a({4}), b({1});
-    for (int i = 0; i < 4; ++i) a.set({i}, static_cast<float>(i + 1));
+    for (int i = 0; i < 4; ++i)
+        a.set({i}, static_cast<float>(i + 1));
     b.set({0}, 10.f);
 
     Tensor c = add(a, b);
@@ -250,7 +311,8 @@ void test_add_broadcast_scalar_reversed()
 void test_mul_broadcast_scalar_reversed()
 {
     Tensor a({4}), b({1});
-    for (int i = 0; i < 4; ++i) a.set({i}, static_cast<float>(i + 1));
+    for (int i = 0; i < 4; ++i)
+        a.set({i}, static_cast<float>(i + 1));
     b.set({0}, 3.f);
 
     Tensor c = mul(a, b);
@@ -266,37 +328,49 @@ void test_add_broadcast_row()
 {
     // a shape {1,3}, b shape {2,3}
     Tensor a({1, 3}), b({2, 3});
-    a.set({0,0}, 1.f); a.set({0,1}, 2.f); a.set({0,2}, 3.f);
+    a.set({0, 0}, 1.f);
+    a.set({0, 1}, 2.f);
+    a.set({0, 2}, 3.f);
 
-    b.set({0,0}, 10.f); b.set({0,1}, 20.f); b.set({0,2}, 30.f);
-    b.set({1,0}, 40.f); b.set({1,1}, 50.f); b.set({1,2}, 60.f);
+    b.set({0, 0}, 10.f);
+    b.set({0, 1}, 20.f);
+    b.set({0, 2}, 30.f);
+    b.set({1, 0}, 40.f);
+    b.set({1, 1}, 50.f);
+    b.set({1, 2}, 60.f);
 
-    Tensor c = add(a, b);   // expected shape {2,3}
+    Tensor c = add(a, b); // expected shape {2,3}
 
-    ASSERT_TRUE(approx_equal(c.get({0,0}), 11.f), "broadcast row add [0][0]");
-    ASSERT_TRUE(approx_equal(c.get({0,1}), 22.f), "broadcast row add [0][1]");
-    ASSERT_TRUE(approx_equal(c.get({0,2}), 33.f), "broadcast row add [0][2]");
-    ASSERT_TRUE(approx_equal(c.get({1,0}), 41.f), "broadcast row add [1][0]");
-    ASSERT_TRUE(approx_equal(c.get({1,1}), 52.f), "broadcast row add [1][1]");
-    ASSERT_TRUE(approx_equal(c.get({1,2}), 63.f), "broadcast row add [1][2]");
+    ASSERT_TRUE(approx_equal(c.get({0, 0}), 11.f), "broadcast row add [0][0]");
+    ASSERT_TRUE(approx_equal(c.get({0, 1}), 22.f), "broadcast row add [0][1]");
+    ASSERT_TRUE(approx_equal(c.get({0, 2}), 33.f), "broadcast row add [0][2]");
+    ASSERT_TRUE(approx_equal(c.get({1, 0}), 41.f), "broadcast row add [1][0]");
+    ASSERT_TRUE(approx_equal(c.get({1, 1}), 52.f), "broadcast row add [1][1]");
+    ASSERT_TRUE(approx_equal(c.get({1, 2}), 63.f), "broadcast row add [1][2]");
 }
 
 void test_mul_broadcast_row()
 {
     Tensor a({1, 3}), b({2, 3});
-    a.set({0,0}, 2.f); a.set({0,1}, 3.f); a.set({0,2}, 4.f);
+    a.set({0, 0}, 2.f);
+    a.set({0, 1}, 3.f);
+    a.set({0, 2}, 4.f);
 
-    b.set({0,0}, 1.f); b.set({0,1}, 2.f); b.set({0,2}, 3.f);
-    b.set({1,0}, 4.f); b.set({1,1}, 5.f); b.set({1,2}, 6.f);
+    b.set({0, 0}, 1.f);
+    b.set({0, 1}, 2.f);
+    b.set({0, 2}, 3.f);
+    b.set({1, 0}, 4.f);
+    b.set({1, 1}, 5.f);
+    b.set({1, 2}, 6.f);
 
-    Tensor c = mul(a, b);   // expected shape {2,3}
+    Tensor c = mul(a, b); // expected shape {2,3}
 
-    ASSERT_TRUE(approx_equal(c.get({0,0}),  2.f), "broadcast row mul [0][0]");
-    ASSERT_TRUE(approx_equal(c.get({0,1}),  6.f), "broadcast row mul [0][1]");
-    ASSERT_TRUE(approx_equal(c.get({0,2}), 12.f), "broadcast row mul [0][2]");
-    ASSERT_TRUE(approx_equal(c.get({1,0}),  8.f), "broadcast row mul [1][0]");
-    ASSERT_TRUE(approx_equal(c.get({1,1}), 15.f), "broadcast row mul [1][1]");
-    ASSERT_TRUE(approx_equal(c.get({1,2}), 24.f), "broadcast row mul [1][2]");
+    ASSERT_TRUE(approx_equal(c.get({0, 0}), 2.f), "broadcast row mul [0][0]");
+    ASSERT_TRUE(approx_equal(c.get({0, 1}), 6.f), "broadcast row mul [0][1]");
+    ASSERT_TRUE(approx_equal(c.get({0, 2}), 12.f), "broadcast row mul [0][2]");
+    ASSERT_TRUE(approx_equal(c.get({1, 0}), 8.f), "broadcast row mul [1][0]");
+    ASSERT_TRUE(approx_equal(c.get({1, 1}), 15.f), "broadcast row mul [1][1]");
+    ASSERT_TRUE(approx_equal(c.get({1, 2}), 24.f), "broadcast row mul [1][2]");
 }
 
 // ── column broadcast  {M,1} op {M,N} ─────────────────────────────────────────
@@ -305,39 +379,49 @@ void test_add_broadcast_col()
 {
     // a shape {3,1}, b shape {3,2}
     Tensor a({3, 1}), b({3, 2});
-    a.set({0,0}, 1.f); a.set({1,0}, 2.f); a.set({2,0}, 3.f);
+    a.set({0, 0}, 1.f);
+    a.set({1, 0}, 2.f);
+    a.set({2, 0}, 3.f);
 
-    b.set({0,0}, 10.f); b.set({0,1}, 20.f);
-    b.set({1,0}, 30.f); b.set({1,1}, 40.f);
-    b.set({2,0}, 50.f); b.set({2,1}, 60.f);
+    b.set({0, 0}, 10.f);
+    b.set({0, 1}, 20.f);
+    b.set({1, 0}, 30.f);
+    b.set({1, 1}, 40.f);
+    b.set({2, 0}, 50.f);
+    b.set({2, 1}, 60.f);
 
-    Tensor c = add(a, b);   // expected shape {3,2}
+    Tensor c = add(a, b); // expected shape {3,2}
 
-    ASSERT_TRUE(approx_equal(c.get({0,0}), 11.f), "broadcast col add [0][0]");
-    ASSERT_TRUE(approx_equal(c.get({0,1}), 21.f), "broadcast col add [0][1]");
-    ASSERT_TRUE(approx_equal(c.get({1,0}), 32.f), "broadcast col add [1][0]");
-    ASSERT_TRUE(approx_equal(c.get({1,1}), 42.f), "broadcast col add [1][1]");
-    ASSERT_TRUE(approx_equal(c.get({2,0}), 53.f), "broadcast col add [2][0]");
-    ASSERT_TRUE(approx_equal(c.get({2,1}), 63.f), "broadcast col add [2][1]");
+    ASSERT_TRUE(approx_equal(c.get({0, 0}), 11.f), "broadcast col add [0][0]");
+    ASSERT_TRUE(approx_equal(c.get({0, 1}), 21.f), "broadcast col add [0][1]");
+    ASSERT_TRUE(approx_equal(c.get({1, 0}), 32.f), "broadcast col add [1][0]");
+    ASSERT_TRUE(approx_equal(c.get({1, 1}), 42.f), "broadcast col add [1][1]");
+    ASSERT_TRUE(approx_equal(c.get({2, 0}), 53.f), "broadcast col add [2][0]");
+    ASSERT_TRUE(approx_equal(c.get({2, 1}), 63.f), "broadcast col add [2][1]");
 }
 
 void test_mul_broadcast_col()
 {
     Tensor a({3, 1}), b({3, 2});
-    a.set({0,0}, 2.f); a.set({1,0}, 3.f); a.set({2,0}, 4.f);
+    a.set({0, 0}, 2.f);
+    a.set({1, 0}, 3.f);
+    a.set({2, 0}, 4.f);
 
-    b.set({0,0}, 5.f); b.set({0,1}, 6.f);
-    b.set({1,0}, 7.f); b.set({1,1}, 8.f);
-    b.set({2,0}, 9.f); b.set({2,1}, 10.f);
+    b.set({0, 0}, 5.f);
+    b.set({0, 1}, 6.f);
+    b.set({1, 0}, 7.f);
+    b.set({1, 1}, 8.f);
+    b.set({2, 0}, 9.f);
+    b.set({2, 1}, 10.f);
 
-    Tensor c = mul(a, b);   // expected shape {3,2}
+    Tensor c = mul(a, b); // expected shape {3,2}
 
-    ASSERT_TRUE(approx_equal(c.get({0,0}), 10.f), "broadcast col mul [0][0]");
-    ASSERT_TRUE(approx_equal(c.get({0,1}), 12.f), "broadcast col mul [0][1]");
-    ASSERT_TRUE(approx_equal(c.get({1,0}), 21.f), "broadcast col mul [1][0]");
-    ASSERT_TRUE(approx_equal(c.get({1,1}), 24.f), "broadcast col mul [1][1]");
-    ASSERT_TRUE(approx_equal(c.get({2,0}), 36.f), "broadcast col mul [2][0]");
-    ASSERT_TRUE(approx_equal(c.get({2,1}), 40.f), "broadcast col mul [2][1]");
+    ASSERT_TRUE(approx_equal(c.get({0, 0}), 10.f), "broadcast col mul [0][0]");
+    ASSERT_TRUE(approx_equal(c.get({0, 1}), 12.f), "broadcast col mul [0][1]");
+    ASSERT_TRUE(approx_equal(c.get({1, 0}), 21.f), "broadcast col mul [1][0]");
+    ASSERT_TRUE(approx_equal(c.get({1, 1}), 24.f), "broadcast col mul [1][1]");
+    ASSERT_TRUE(approx_equal(c.get({2, 0}), 36.f), "broadcast col mul [2][0]");
+    ASSERT_TRUE(approx_equal(c.get({2, 1}), 40.f), "broadcast col mul [2][1]");
 }
 
 // ── outer-product expand  {M,1} op {1,N} → {M,N} ────────────────────────────
@@ -345,31 +429,41 @@ void test_mul_broadcast_col()
 void test_add_broadcast_outer()
 {
     Tensor a({3, 1}), b({1, 4});
-    a.set({0,0}, 1.f); a.set({1,0}, 2.f); a.set({2,0}, 3.f);
-    b.set({0,0}, 10.f); b.set({0,1}, 20.f); b.set({0,2}, 30.f); b.set({0,3}, 40.f);
+    a.set({0, 0}, 1.f);
+    a.set({1, 0}, 2.f);
+    a.set({2, 0}, 3.f);
+    b.set({0, 0}, 10.f);
+    b.set({0, 1}, 20.f);
+    b.set({0, 2}, 30.f);
+    b.set({0, 3}, 40.f);
 
-    Tensor c = add(a, b);   // expected shape {3,4}
+    Tensor c = add(a, b); // expected shape {3,4}
 
-    ASSERT_TRUE(approx_equal(c.get({0,0}), 11.f), "broadcast outer add [0][0]");
-    ASSERT_TRUE(approx_equal(c.get({0,3}), 41.f), "broadcast outer add [0][3]");
-    ASSERT_TRUE(approx_equal(c.get({1,1}), 22.f), "broadcast outer add [1][1]");
-    ASSERT_TRUE(approx_equal(c.get({2,2}), 33.f), "broadcast outer add [2][2]");
-    ASSERT_TRUE(approx_equal(c.get({2,3}), 43.f), "broadcast outer add [2][3]");
+    ASSERT_TRUE(approx_equal(c.get({0, 0}), 11.f), "broadcast outer add [0][0]");
+    ASSERT_TRUE(approx_equal(c.get({0, 3}), 41.f), "broadcast outer add [0][3]");
+    ASSERT_TRUE(approx_equal(c.get({1, 1}), 22.f), "broadcast outer add [1][1]");
+    ASSERT_TRUE(approx_equal(c.get({2, 2}), 33.f), "broadcast outer add [2][2]");
+    ASSERT_TRUE(approx_equal(c.get({2, 3}), 43.f), "broadcast outer add [2][3]");
 }
 
 void test_mul_broadcast_outer()
 {
     Tensor a({3, 1}), b({1, 4});
-    a.set({0,0}, 2.f); a.set({1,0}, 3.f); a.set({2,0}, 4.f);
-    b.set({0,0}, 1.f); b.set({0,1}, 2.f); b.set({0,2}, 3.f); b.set({0,3}, 4.f);
+    a.set({0, 0}, 2.f);
+    a.set({1, 0}, 3.f);
+    a.set({2, 0}, 4.f);
+    b.set({0, 0}, 1.f);
+    b.set({0, 1}, 2.f);
+    b.set({0, 2}, 3.f);
+    b.set({0, 3}, 4.f);
 
-    Tensor c = mul(a, b);   // expected shape {3,4}
+    Tensor c = mul(a, b); // expected shape {3,4}
 
-    ASSERT_TRUE(approx_equal(c.get({0,0}),  2.f), "broadcast outer mul [0][0]");
-    ASSERT_TRUE(approx_equal(c.get({0,3}),  8.f), "broadcast outer mul [0][3]");
-    ASSERT_TRUE(approx_equal(c.get({1,1}),  6.f), "broadcast outer mul [1][1]");
-    ASSERT_TRUE(approx_equal(c.get({2,2}), 12.f), "broadcast outer mul [2][2]");
-    ASSERT_TRUE(approx_equal(c.get({2,3}), 16.f), "broadcast outer mul [2][3]");
+    ASSERT_TRUE(approx_equal(c.get({0, 0}), 2.f), "broadcast outer mul [0][0]");
+    ASSERT_TRUE(approx_equal(c.get({0, 3}), 8.f), "broadcast outer mul [0][3]");
+    ASSERT_TRUE(approx_equal(c.get({1, 1}), 6.f), "broadcast outer mul [1][1]");
+    ASSERT_TRUE(approx_equal(c.get({2, 2}), 12.f), "broadcast outer mul [2][2]");
+    ASSERT_TRUE(approx_equal(c.get({2, 3}), 16.f), "broadcast outer mul [2][3]");
 }
 
 // ── leading-dim expand  {N} op {M,N} → {M,N} ─────────────────────────────────
@@ -379,37 +473,49 @@ void test_add_broadcast_leading_dim()
 {
     // a shape {3}, b shape {2,3}
     Tensor a({3}), b({2, 3});
-    a.set({0}, 1.f); a.set({1}, 2.f); a.set({2}, 3.f);
+    a.set({0}, 1.f);
+    a.set({1}, 2.f);
+    a.set({2}, 3.f);
 
-    b.set({0,0}, 10.f); b.set({0,1}, 20.f); b.set({0,2}, 30.f);
-    b.set({1,0}, 40.f); b.set({1,1}, 50.f); b.set({1,2}, 60.f);
+    b.set({0, 0}, 10.f);
+    b.set({0, 1}, 20.f);
+    b.set({0, 2}, 30.f);
+    b.set({1, 0}, 40.f);
+    b.set({1, 1}, 50.f);
+    b.set({1, 2}, 60.f);
 
-    Tensor c = add(a, b);   // expected shape {2,3}
+    Tensor c = add(a, b); // expected shape {2,3}
 
-    ASSERT_TRUE(approx_equal(c.get({0,0}), 11.f), "broadcast leading add [0][0]");
-    ASSERT_TRUE(approx_equal(c.get({0,1}), 22.f), "broadcast leading add [0][1]");
-    ASSERT_TRUE(approx_equal(c.get({0,2}), 33.f), "broadcast leading add [0][2]");
-    ASSERT_TRUE(approx_equal(c.get({1,0}), 41.f), "broadcast leading add [1][0]");
-    ASSERT_TRUE(approx_equal(c.get({1,1}), 52.f), "broadcast leading add [1][1]");
-    ASSERT_TRUE(approx_equal(c.get({1,2}), 63.f), "broadcast leading add [1][2]");
+    ASSERT_TRUE(approx_equal(c.get({0, 0}), 11.f), "broadcast leading add [0][0]");
+    ASSERT_TRUE(approx_equal(c.get({0, 1}), 22.f), "broadcast leading add [0][1]");
+    ASSERT_TRUE(approx_equal(c.get({0, 2}), 33.f), "broadcast leading add [0][2]");
+    ASSERT_TRUE(approx_equal(c.get({1, 0}), 41.f), "broadcast leading add [1][0]");
+    ASSERT_TRUE(approx_equal(c.get({1, 1}), 52.f), "broadcast leading add [1][1]");
+    ASSERT_TRUE(approx_equal(c.get({1, 2}), 63.f), "broadcast leading add [1][2]");
 }
 
 void test_mul_broadcast_leading_dim()
 {
     Tensor a({3}), b({2, 3});
-    a.set({0}, 2.f); a.set({1}, 3.f); a.set({2}, 4.f);
+    a.set({0}, 2.f);
+    a.set({1}, 3.f);
+    a.set({2}, 4.f);
 
-    b.set({0,0}, 1.f); b.set({0,1}, 2.f); b.set({0,2}, 3.f);
-    b.set({1,0}, 4.f); b.set({1,1}, 5.f); b.set({1,2}, 6.f);
+    b.set({0, 0}, 1.f);
+    b.set({0, 1}, 2.f);
+    b.set({0, 2}, 3.f);
+    b.set({1, 0}, 4.f);
+    b.set({1, 1}, 5.f);
+    b.set({1, 2}, 6.f);
 
-    Tensor c = mul(a, b);   // expected shape {2,3}
+    Tensor c = mul(a, b); // expected shape {2,3}
 
-    ASSERT_TRUE(approx_equal(c.get({0,0}),  2.f), "broadcast leading mul [0][0]");
-    ASSERT_TRUE(approx_equal(c.get({0,1}),  6.f), "broadcast leading mul [0][1]");
-    ASSERT_TRUE(approx_equal(c.get({0,2}), 12.f), "broadcast leading mul [0][2]");
-    ASSERT_TRUE(approx_equal(c.get({1,0}),  8.f), "broadcast leading mul [1][0]");
-    ASSERT_TRUE(approx_equal(c.get({1,1}), 15.f), "broadcast leading mul [1][1]");
-    ASSERT_TRUE(approx_equal(c.get({1,2}), 24.f), "broadcast leading mul [1][2]");
+    ASSERT_TRUE(approx_equal(c.get({0, 0}), 2.f), "broadcast leading mul [0][0]");
+    ASSERT_TRUE(approx_equal(c.get({0, 1}), 6.f), "broadcast leading mul [0][1]");
+    ASSERT_TRUE(approx_equal(c.get({0, 2}), 12.f), "broadcast leading mul [0][2]");
+    ASSERT_TRUE(approx_equal(c.get({1, 0}), 8.f), "broadcast leading mul [1][0]");
+    ASSERT_TRUE(approx_equal(c.get({1, 1}), 15.f), "broadcast leading mul [1][1]");
+    ASSERT_TRUE(approx_equal(c.get({1, 2}), 24.f), "broadcast leading mul [1][2]");
 }
 
 // ── broadcast error / rejection cases ────────────────────────────────────────
@@ -420,8 +526,14 @@ void test_add_broadcast_incompatible()
     // {2,3} op {2,4} — last dims differ and neither is 1
     Tensor a({2, 3}), b({2, 4});
     bool threw = false;
-    try { add(a, b); }
-    catch (const std::runtime_error &) { threw = true; }
+    try
+    {
+        add(a, b);
+    }
+    catch (const std::runtime_error &)
+    {
+        threw = true;
+    }
     ASSERT_TRUE(threw, "broadcast add {2,3} vs {2,4} throws");
 }
 
@@ -429,8 +541,14 @@ void test_mul_broadcast_incompatible()
 {
     Tensor a({2, 3}), b({2, 4});
     bool threw = false;
-    try { mul(a, b); }
-    catch (const std::runtime_error &) { threw = true; }
+    try
+    {
+        mul(a, b);
+    }
+    catch (const std::runtime_error &)
+    {
+        threw = true;
+    }
     ASSERT_TRUE(threw, "broadcast mul {2,3} vs {2,4} throws");
 }
 
@@ -439,8 +557,14 @@ void test_add_broadcast_incompatible_leading()
     // {3} op {2,4} — trailing dim 3 != 4 and neither is 1
     Tensor a({3}), b({2, 4});
     bool threw = false;
-    try { add(a, b); }
-    catch (const std::runtime_error &) { threw = true; }
+    try
+    {
+        add(a, b);
+    }
+    catch (const std::runtime_error &)
+    {
+        threw = true;
+    }
     ASSERT_TRUE(threw, "broadcast add {3} vs {2,4} throws");
 }
 
@@ -448,8 +572,14 @@ void test_mul_broadcast_incompatible_leading()
 {
     Tensor a({3}), b({2, 4});
     bool threw = false;
-    try { mul(a, b); }
-    catch (const std::runtime_error &) { threw = true; }
+    try
+    {
+        mul(a, b);
+    }
+    catch (const std::runtime_error &)
+    {
+        threw = true;
+    }
     ASSERT_TRUE(threw, "broadcast mul {3} vs {2,4} throws");
 }
 
@@ -459,36 +589,38 @@ void test_add_broadcast_with_zeros()
 {
     // Adding a zero row tensor should act as identity for every row
     Tensor a({1, 3}), b({4, 3});
-    a.set({0,0}, 0.f); a.set({0,1}, 0.f); a.set({0,2}, 0.f);
+    a.set({0, 0}, 0.f);
+    a.set({0, 1}, 0.f);
+    a.set({0, 2}, 0.f);
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < 3; ++j)
-            b.set({i,j}, static_cast<float>(i * 3 + j));
+            b.set({i, j}, static_cast<float>(i * 3 + j));
 
     Tensor c = add(a, b);
 
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < 3; ++j)
-            ASSERT_TRUE(approx_equal(c.get({i,j}), static_cast<float>(i * 3 + j)),
-                        "broadcast zero-row add identity [" + std::to_string(i)
-                        + "][" + std::to_string(j) + "]");
+            ASSERT_TRUE(approx_equal(c.get({i, j}), static_cast<float>(i * 3 + j)),
+                        "broadcast zero-row add identity [" + std::to_string(i) + "][" + std::to_string(j) + "]");
 }
 
 void test_mul_broadcast_with_ones()
 {
     // Multiplying by an all-ones column tensor should be identity for every col
     Tensor a({3, 1}), b({3, 4});
-    a.set({0,0}, 1.f); a.set({1,0}, 1.f); a.set({2,0}, 1.f);
+    a.set({0, 0}, 1.f);
+    a.set({1, 0}, 1.f);
+    a.set({2, 0}, 1.f);
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 4; ++j)
-            b.set({i,j}, static_cast<float>(i * 4 + j + 1));
+            b.set({i, j}, static_cast<float>(i * 4 + j + 1));
 
     Tensor c = mul(a, b);
 
     for (int i = 0; i < 3; ++i)
         for (int j = 0; j < 4; ++j)
-            ASSERT_TRUE(approx_equal(c.get({i,j}), static_cast<float>(i * 4 + j + 1)),
-                        "broadcast ones-col mul identity [" + std::to_string(i)
-                        + "][" + std::to_string(j) + "]");
+            ASSERT_TRUE(approx_equal(c.get({i, j}), static_cast<float>(i * 4 + j + 1)),
+                        "broadcast ones-col mul identity [" + std::to_string(i) + "][" + std::to_string(j) + "]");
 }
 
 // ── timing benchmarks ────────────────────────────────────────────────────────
@@ -502,9 +634,14 @@ void bench_add(int size)
     const float *rb = b.get_tensor_unrolled();
     float *wa = const_cast<float *>(ra);
     float *wb = const_cast<float *>(rb);
-    for (int i = 0; i < size; ++i) { wa[i] = static_cast<float>(i); wb[i] = 1.f; }
+    for (int i = 0; i < size; ++i)
+    {
+        wa[i] = static_cast<float>(i);
+        wb[i] = 1.f;
+    }
 
-    double ms = time_ms([&]{ add(a, b); });
+    double ms = time_ms([&]
+                        { add(a, b); });
     std::cout << "[BENCH] add  size=" << size << "  time=" << ms << " ms\n";
 }
 
@@ -517,9 +654,14 @@ void bench_mul(int size)
     float *wa = const_cast<float *>(ra);
     const float *rb = b.get_tensor_unrolled();
     float *wb = const_cast<float *>(rb);
-    for (int i = 0; i < size; ++i) { wa[i] = static_cast<float>(i); wb[i] = 2.f; }
+    for (int i = 0; i < size; ++i)
+    {
+        wa[i] = static_cast<float>(i);
+        wb[i] = 2.f;
+    }
 
-    double ms = time_ms([&]{ mul(a, b); });
+    double ms = time_ms([&]
+                        { mul(a, b); });
     std::cout << "[BENCH] mul  size=" << size << "  time=" << ms << " ms\n";
 }
 
@@ -532,10 +674,13 @@ void bench_add_broadcast_row(int rows, int cols)
     float *wb = const_cast<float *>(rb);
     const float *ra = a.get_tensor_unrolled();
     float *wa = const_cast<float *>(ra);
-    for (int j = 0; j < cols; ++j)         wa[j] = static_cast<float>(j);
-    for (int i = 0; i < rows * cols; ++i)   wb[i] = static_cast<float>(i);
+    for (int j = 0; j < cols; ++j)
+        wa[j] = static_cast<float>(j);
+    for (int i = 0; i < rows * cols; ++i)
+        wb[i] = static_cast<float>(i);
 
-    double ms = time_ms([&]{ add(a, b); });
+    double ms = time_ms([&]
+                        { add(a, b); });
     std::cout << "[BENCH] add  broadcast_row  rows=" << rows
               << "  cols=" << cols << "  time=" << ms << " ms\n";
 }
@@ -549,10 +694,13 @@ void bench_mul_broadcast_col(int rows, int cols)
     float *wa = const_cast<float *>(ra);
     const float *rb = b.get_tensor_unrolled();
     float *wb = const_cast<float *>(rb);
-    for (int i = 0; i < rows; ++i)          wa[i] = static_cast<float>(i + 1);
-    for (int i = 0; i < rows * cols; ++i)   wb[i] = static_cast<float>(i);
+    for (int i = 0; i < rows; ++i)
+        wa[i] = static_cast<float>(i + 1);
+    for (int i = 0; i < rows * cols; ++i)
+        wb[i] = static_cast<float>(i);
 
-    double ms = time_ms([&]{ mul(a, b); });
+    double ms = time_ms([&]
+                        { mul(a, b); });
     std::cout << "[BENCH] mul  broadcast_col  rows=" << rows
               << "  cols=" << cols << "  time=" << ms << " ms\n";
 }
@@ -573,6 +721,9 @@ int main()
     test_mul_by_one();
     test_mul_by_zero();
     test_mul_shape_mismatch();
+#ifdef USE_CUDA
+    test_add_mul_cuda_contiguous();
+#endif
 
     std::cout << "\n=== large tensor test ===\n";
     test_add_mul_large_tensor();

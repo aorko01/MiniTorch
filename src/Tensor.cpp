@@ -67,6 +67,11 @@ void Tensor::set_device(std::string device)
     storage_->set_device(device);
 }
 
+const std::string &Tensor::device() const
+{
+    return storage_->device();
+}
+
 void Tensor::set_grad_fn(const std::shared_ptr<GradFn> &fn)
 {
     grad_fn_ = fn;

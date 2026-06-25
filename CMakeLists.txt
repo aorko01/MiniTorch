@@ -55,6 +55,17 @@ project(minitorch LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Some toolchains inject -flto by default, which conflicts with the CUDA device
+# link step used by the pybind module. Strip it so the build stays consistent.
+foreach(flag_var
+    CMAKE_C_FLAGS CMAKE_CXX_FLAGS CMAKE_CUDA_FLAGS
+    CMAKE_EXE_LINKER_FLAGS CMAKE_SHARED_LINKER_FLAGS CMAKE_MODULE_LINKER_FLAGS
+)
+    if(DEFINED ${flag_var})
+        string(REPLACE "-flto" "" ${flag_var} "${${flag_var}}")
+    endif()
+endforeach()
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  Optional CUDA support
 #  Enabled automatically when nvcc is found, or force with -DUSE_CUDA=ON/OFF.
@@ -73,6 +84,10 @@ if(USE_CUDA STREQUAL "AUTO")
 endif()
 
 if(USE_CUDA)
+    if(NOT CMAKE_CUDA_HOST_COMPILER)
+        set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}" CACHE FILEPATH "CUDA host compiler" FORCE)
+    endif()
+
     enable_language(CUDA)
     find_package(CUDAToolkit REQUIRED)
 
@@ -107,6 +122,10 @@ set(MINITORCH_SOURCES
     src/autograd/ops/AccumulateGrad.cpp
     src/autograd/Engine.cpp
 )
+
+if(USE_CUDA)
+    list(APPEND MINITORCH_SOURCES src/autograd/ops/cuda_ops.cu)
+endif()
 
 add_library(minitorch ${MINITORCH_SOURCES})
 set_target_properties(minitorch PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -155,8 +174,11 @@ endif()
 
 find_package(pybind11 REQUIRED)
 
-pybind11_add_module(minitorch_cpp bindings/pybind.cpp)
+pybind11_add_module(minitorch_cpp NO_EXTRAS bindings/pybind.cpp)
 target_link_libraries(minitorch_cpp PRIVATE minitorch)
+set_target_properties(minitorch_cpp PROPERTIES INTERPROCEDURAL_OPTIMIZATION FALSE)
+target_compile_options(minitorch_cpp PRIVATE -fno-lto)
+target_link_options(minitorch_cpp PRIVATE -fno-lto)
 
 if(USE_CUDA)
     target_link_libraries(minitorch_cpp PRIVATE CUDA::cudart)

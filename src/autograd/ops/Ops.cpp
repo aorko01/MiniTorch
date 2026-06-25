@@ -122,6 +122,22 @@ void simd_mul(const Tensor &a, const Tensor &b, Tensor &out, const std::vector<i
         tensor_out[i] = tensor_a[i] * tensor_b[i];
 }
 
+static int numel(const std::vector<int> &shape)
+{
+    int size = 1;
+    for (int dim : shape)
+        size *= dim;
+    return size;
+}
+
+static void validate_same_device(const Tensor &a, const Tensor &b)
+{
+    if (a.device() != b.device())
+    {
+        throw std::runtime_error("raw add/mul requires tensors on the same device");
+    }
+}
+
 Tensor raw_add(const Tensor &a, const Tensor &b)
 {
     std::vector<int> shape_a = a.shape();
@@ -138,8 +154,25 @@ Tensor raw_add(const Tensor &a, const Tensor &b)
     Tensor b_view = b.broadcast_view(output_shape);
 
     Tensor out(output_shape);
+    validate_same_device(a_view, b_view);
 
-    if (a_view.is_contiguous() && b_view.is_contiguous())
+    if (a_view.device() == "cuda")
+    {
+#ifdef USE_CUDA
+        if (a_view.is_contiguous() && b_view.is_contiguous())
+        {
+            out.set_device("cuda");
+            cuda_raw_add_contiguous(a_view, b_view, out, numel(output_shape));
+        }
+        else
+        {
+            generic_add(a_view, b_view, out, output_shape);
+        }
+#else
+        throw std::runtime_error("CUDA support is not enabled in this build");
+#endif
+    }
+    else if (a_view.is_contiguous() && b_view.is_contiguous())
     {
         simd_add(a_view, b_view, out, output_shape);
     }
@@ -167,8 +200,25 @@ Tensor raw_mul(const Tensor &a, const Tensor &b)
     Tensor b_view = b.broadcast_view(output_shape);
 
     Tensor out(output_shape);
+    validate_same_device(a_view, b_view);
 
-    if (a_view.is_contiguous() && b_view.is_contiguous())
+    if (a_view.device() == "cuda")
+    {
+#ifdef USE_CUDA
+        if (a_view.is_contiguous() && b_view.is_contiguous())
+        {
+            out.set_device("cuda");
+            cuda_raw_mul_contiguous(a_view, b_view, out, numel(output_shape));
+        }
+        else
+        {
+            generic_mul(a_view, b_view, out, output_shape);
+        }
+#else
+        throw std::runtime_error("CUDA support is not enabled in this build");
+#endif
+    }
+    else if (a_view.is_contiguous() && b_view.is_contiguous())
     {
         simd_mul(a_view, b_view, out, output_shape);
     }
@@ -186,7 +236,7 @@ Tensor add(const Tensor &a, const Tensor &b)
     if (a.requires_grad() || b.requires_grad())
     {
         auto fn = std::make_shared<AddBackward>();
-        fn->next_func = {make_edge(a,0),make_edge(b,1)};
+        fn->next_func = {make_edge(a, 0), make_edge(b, 1)};
 
         out.set_grad_fn(fn);
         out.set_requires_grad(true);
@@ -201,7 +251,7 @@ Tensor mul(const Tensor &a, const Tensor &b)
     if (a.requires_grad() || b.requires_grad())
     {
         auto fn = std::make_shared<MulBackward>(a, b);
-        fn->next_func = { make_edge(a, 0), make_edge(b, 1) };  // fixed: next_functions + make_edge
+        fn->next_func = {make_edge(a, 0), make_edge(b, 1)}; // fixed: next_functions + make_edge
 
         out.set_grad_fn(fn);
         out.set_requires_grad(true);

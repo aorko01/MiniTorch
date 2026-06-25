@@ -6,7 +6,7 @@
 
 class GradFn;
 
-class Tensor: public std::enable_shared_from_this<Tensor> 
+class Tensor : public std::enable_shared_from_this<Tensor>
 {
 private:
     std::shared_ptr<Storage> storage_;
@@ -14,10 +14,10 @@ private:
     std::vector<int> strides_;
     int offset_ = 0;
 
-    //for autograd
+    // for autograd
     bool requires_grad_ = false;
-    std::shared_ptr<Tensor> grad_;          // accumulated gradient (same shape)
-    std::shared_ptr<GradFn> grad_fn_;       
+    std::shared_ptr<Tensor> grad_; // accumulated gradient (same shape)
+    std::shared_ptr<GradFn> grad_fn_;
     bool is_leaf_ = true;
 
     // given the indices where does the element actually lie in the 1D array
@@ -34,14 +34,14 @@ public:
     const float *get_tensor_unrolled() const;
     float *get_tensor_unrolled();
     void set_device(std::string device);
+    const std::string &device() const;
 
-    //autograd related getter and setter
+    // autograd related getter and setter
     void set_grad_fn(const std::shared_ptr<GradFn> &fn);
     void set_requires_grad(bool flag);
     void set_is_leaf(bool flag);
     std::shared_ptr<Tensor> grad() const;
-    void set_grad(const std::shared_ptr<Tensor>& grad);
-
+    void set_grad(const std::shared_ptr<Tensor> &grad);
 
     bool requires_grad() const;
     bool is_leaf() const;
