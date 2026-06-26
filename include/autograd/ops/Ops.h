@@ -23,6 +23,10 @@ Tensor broadcast_view(
     const Tensor &a,
     const std::vector<int> &shape);
 
+Tensor mat_mul(
+    const Tensor &a,
+    const Tensor &b);
+
 #ifdef USE_CUDA
 void cuda_raw_add_contiguous(
     const Tensor &a,

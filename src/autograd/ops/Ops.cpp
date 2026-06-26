@@ -259,3 +259,52 @@ Tensor mul(const Tensor &a, const Tensor &b)
     }
     return out;
 }
+
+void generic_mat_mul(const Tensor &a, const Tensor &b, Tensor &out, const std::vector<int> &shape_a)
+{
+    //
+}
+
+Tensor mat_mul(
+    const Tensor &a,
+    const Tensor &b)
+{
+    std::vector<int> shape_a = a.shape();
+    std::vector<int> shape_b = b.shape();
+
+    // popping the last two dimenstions because (....,m,n) (....,n,p) is a valid dimenstion and all the dimensions before this needs to match
+    std::vector<int> last_two_a(shape_a.end() - 2, shape_a.end());
+    std::vector<int> last_two_b(shape_b.end() - 2, shape_b.end());
+
+    shape_a.erase(shape_a.end() - 2, shape_a.end());
+    shape_b.erase(shape_b.end() - 2, shape_b.end());
+
+    std::vector<int> common_shape;
+
+    if (shape_a != shape_b)
+        common_shape = broadcast_shape(shape_a, shape_b);
+    else
+        common_shape = shape_a;
+
+    std::vector<int> updated_shape_a = common_shape;
+    std::vector<int> updated_shape_b = common_shape;
+    std::vector<int> output_shape = common_shape;
+
+    for (int i = 0; i < 2; i++)
+    {
+        updated_shape_a.push_back(last_two_a[i]);
+        updated_shape_b.push_back(last_two_b[i]);
+    }
+    // updated_shape_a.push_back
+    Tensor a_view = a.broadcast_view(updated_shape_a);
+    Tensor b_view = b.broadcast_view(updated_shape_b);
+
+    //(....,m,n) (....,n,p) => (....,m,p)
+    output_shape.push_back(last_two_a[0]);
+    output_shape.push_back(last_two_b[1]);
+
+    Tensor out(output_shape);
+    validate_same_device(a_view, b_view);
+
+    generic_mat_mul(a_view, b_view, out, output_shape);
+}
