@@ -260,9 +260,44 @@ Tensor mul(const Tensor &a, const Tensor &b)
     return out;
 }
 
-void generic_mat_mul(const Tensor &a, const Tensor &b, Tensor &out, const std::vector<int> &shape_a)
+void generic_mat_mul(const Tensor &a, const Tensor &b, Tensor &out, const std::vector<int> &shape_out)
 {
-    //
+    const float *a_ptr = a.get_tensor_unrolled();
+    const float *b_ptr = b.get_tensor_unrolled();
+    float *out_ptr = out.get_tensor_unrolled();
+
+    const std::vector<int> shape_a = a.shape();
+    const std::vector<int> shape_b = b.shape();
+
+    int m = shape_a[shape_a.size() - 2];
+    int n = shape_a[shape_a.size() - 1];
+    int p = shape_b[shape_b.size() - 1];
+
+    int batch_size = 1;
+    for (int i = 0; i < shape_out.size() - 2; i++)
+    {
+        batch_size *= shape_out[i];
+    }
+
+    for (int batch = 0; batch < batch_size; batch++)
+    {
+        const float *a = a_ptr + batch * m * n;
+        const float *b = b_ptr + batch * n * p;
+        float *out = out_ptr + batch * m * p;
+
+        for (int i = 0; i < m; i++)
+        {
+            for (int j = 0; j < p; j++)
+            {
+                float sum = 0;
+                for (int k = 0; k < n; k++)
+                {
+                    sum += a[i * n + k] * b[k * p + j];
+                }
+                out[i * p + j] = sum;
+            }
+        }
+    }
 }
 
 Tensor mat_mul(
@@ -272,9 +307,18 @@ Tensor mat_mul(
     std::vector<int> shape_a = a.shape();
     std::vector<int> shape_b = b.shape();
 
+    if (shape_a.size() < 2 || shape_b.size() < 2)
+        throw std::invalid_argument("mat_mul: both tensors must be at least 2-D");
+
     // popping the last two dimenstions because (....,m,n) (....,n,p) is a valid dimenstion and all the dimensions before this needs to match
     std::vector<int> last_two_a(shape_a.end() - 2, shape_a.end());
     std::vector<int> last_two_b(shape_b.end() - 2, shape_b.end());
+
+    if (last_two_a[1] != last_two_b[0])
+        throw std::invalid_argument(
+            "mat_mul: inner dimensions must match — got " +
+            std::to_string(last_two_a[1]) + " vs " +
+            std::to_string(last_two_b[0]));
 
     shape_a.erase(shape_a.end() - 2, shape_a.end());
     shape_b.erase(shape_b.end() - 2, shape_b.end());
@@ -307,4 +351,5 @@ Tensor mat_mul(
     validate_same_device(a_view, b_view);
 
     generic_mat_mul(a_view, b_view, out, output_shape);
+    return out;
 }

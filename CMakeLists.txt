@@ -170,6 +170,14 @@ if(USE_CUDA)
 endif()
 add_test(NAME ops_tests COMMAND test_ops)
 
+# ── test_matmul ─────────────────────────────────────────────────────────────
+add_executable(test_matmul tests/test_matmul.cpp)
+target_link_libraries(test_matmul PRIVATE minitorch)
+if(USE_CUDA)
+    target_link_libraries(test_matmul PRIVATE CUDA::cudart)
+endif()
+add_test(NAME matmul_tests COMMAND test_matmul)
+
 # ── test_device (only built when CUDA is available) ───────────────────────────
 if(USE_CUDA)
     add_executable(test_device tests/test_device.cpp)
